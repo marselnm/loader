@@ -54,6 +54,11 @@ char buf[] = {0x81, 0, 0, 0};
 		size = IMG_SIZE;
 	}
 
+    addr = 0x8000;
+    size = 0x100000;
+    jump_addr = 0x20000000; 
+                
+
 	
 /* ==================== 2nd step: Load from media ==================== */
 	/* Load from Dataflash in RAM */
@@ -104,13 +109,17 @@ char buf[] = {0x81, 0, 0, 0};
 	}
 	else
 #endif
-	//dbg_print("chek3 \n\r");
+	dbg_print("chek3 \n\r");
 	if (addr == IMG_ADDRESS_LOADER) {
 	//dbg_print("chek4 \n\r");
 		return JUMP_ADDR_LOADER;
 		
 		}
 	else
-		return jump_addr;//jump_addr;//0x10000060; 
+    {
+        dbg_print("chek4 \n\r");
+        return jump_addr;//jump_addr;//0x10000060; 
+    }
+		
 } 
 
