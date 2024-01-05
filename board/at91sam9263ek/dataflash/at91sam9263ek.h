@@ -95,7 +95,7 @@
 #define	IMG_SIZE_LOADER		0x4000			
 
 #define MACH_TYPE       	0x4B2       	/* AT91SAM9263-EK */
-#define JUMP_ADDR			0x10000040		/* Final Jump Address */
+#define JUMP_ADDR			0x20000000		/* Final Jump Address */
 #define JUMP_ADDR_LOADER	0x302000		
 
 #define	LOADER_CODE			0x32AD5149
