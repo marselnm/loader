@@ -2,3 +2,5 @@
 *.bin
 *.elf
 *.o
+/.vscode
+/board/at91sam9263ek/dataflash/version.c

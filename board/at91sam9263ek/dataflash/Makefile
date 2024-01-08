@@ -52,6 +52,8 @@ OBJS+=\
 	main.o \
 	gpio.o \
 	pmc.o \
+	pmc_v2.o \
+	pit.o \
 	debug.o \
 	sdramc.o \
 	dataflash.o \
@@ -60,11 +62,12 @@ OBJS+=\
 	div0.o \
 	udiv.o \
 	string.o \
-	sram.o
+	sram.o \
+	version.o
 
 rebuild: clean all
 
-all: 	$(BOOT_NAME)
+all: write_ver $(BOOT_NAME) 
 
 ifeq ($(TOOLCHAIN), gcc)
 $(BOOT_NAME): $(OBJS)
@@ -85,6 +88,12 @@ gpio.o: $(BOOTSTRAP_PATH)/driver/gpio.c
 
 pmc.o:  $(BOOTSTRAP_PATH)/driver/pmc.c 
 	$(CC) -c $(CCFLAGS) $(BOOTSTRAP_PATH)/driver/pmc.c -o pmc.o
+
+pmc_v2.o:  $(BOOTSTRAP_PATH)/driver/pmc_v2.c 
+	$(CC) -c $(CCFLAGS) $(BOOTSTRAP_PATH)/driver/pmc_v2.c -o pmc_v2.o
+
+pit.o:  $(BOOTSTRAP_PATH)/driver/pit.c 
+	$(CC) -c $(CCFLAGS) $(BOOTSTRAP_PATH)/driver/pit.c -o pit.o
 
 debug.o: $(BOOTSTRAP_PATH)/driver/debug.c 
 	$(CC) -c $(CCFLAGS) $(BOOTSTRAP_PATH)/driver/debug.c -o debug.o
@@ -116,5 +125,11 @@ _udivsi3.o:  $(BOOTSTRAP_PATH)/lib/_udivsi3.S
 _umodsi3.o:  $(BOOTSTRAP_PATH)/lib/_umodsi3.S
 	$(AS) $(ASFLAGS) $(BOOTSTRAP_PATH)/lib/_umodsi3.S -o _umodsi3.o
 
+version.o:  $(BOOTSTRAP_PATH)/board/at91sam9263ek/dataflash/version.c 
+	$(CC) -c $(CCFLAGS) $(BOOTSTRAP_PATH)/board/at91sam9263ek/dataflash/version.c -o version.o
+
+write_ver:
+	./version.sh	
+
 clean:
-	rm -f *.o *.bin *.elf *.map
+	rm -f *.o *.bin *.elf *.map version.c

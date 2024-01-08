@@ -6,10 +6,12 @@
  *-----------------------------------------------------------------------------
  */
 #include <string.h>
-#include "../../include/AT91SAM9263_inc.h" 
+#include "../../include/AT91SAM9263.h" 
 #include "../../include/part.h"
 #include "../../include/gpio.h"
 #include "../../include/pmc.h"
+#include "../../include/pmc_v2.h"
+#include "../../include/pit.h"
 #include "../../include/debug.h"
 #include "../../include/sdramc.h"
 #include "../../include/main.h"
@@ -24,6 +26,9 @@
 
 #define	ERASE_DATA_FLASH	0xAA
 #define	NO_DATA				0x14	
+#define K_SYMBOL            0x6B
+#define DELAY_LOAD_MS       3000
+
 static inline unsigned int get_cp15(void)
 {
 	unsigned int value;
@@ -44,6 +49,8 @@ static inline void set_cp15(unsigned int value)
 /* This function is invoked as soon as possible during the c_startup	       */
 /* The bss segment must be initialized					       */
 /*---------------------------------------------------------------------------- */
+extern const char boot_hash[];
+
 int hw_init(void) {
 	volatile unsigned int* AT91C_PIOB = (volatile unsigned int*)0xFFFFF400;
 	//volatile unsigned int* rstc_rsr = (volatile unsigned int*)0xFFFFFD04;
@@ -51,13 +58,20 @@ int hw_init(void) {
 	int i, j;
 	unsigned int res = NO_DATA;
 	unsigned int address = IMG_ADDRESS;
+
+    PMC_EnablePeripheral(AT91C_ID_PIOA);
+    PMC_EnablePeripheral(AT91C_ID_TC012);
+    PMC_EnablePeripheral(AT91C_ID_SYS);
+
 		
 	/* PIOs for DBGU */
 	const struct pio_desc hw_pio[] = {
 		{"RXD", AT91C_PIN_PC(30), 0, PIO_DEFAULT, PIO_PERIPH_A},
 		{"TXD", AT91C_PIN_PC(31), 0, PIO_DEFAULT, PIO_PERIPH_A},
+        {"LED", AT91C_PIN_PA(11), 0, PIO_DEFAULT, PIO_OUTPUT},
 		{(char *) 0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
 	};
+    turnOffLed();
 
 	/* Disable watchdog */
 	writel(AT91C_WDTC_WDDIS, AT91C_BASE_WDTC + WDTC_WDMR);
@@ -95,22 +109,34 @@ int hw_init(void) {
 	/* Enable Debug messages on the DBGU */
 	dbg_init(BAUDRATE(MASTER_CLOCK, 115200));
 	dbg_print("Start AT91Bootstrap...\n\r");
-	dbg_print("Hello from DATAFLASH...\n\r");
-	
-	/* Read comand from DBGU */
-	res = read_dbgu(DBGU_RHR);
-	
-	if (res == ERASE_DATA_FLASH) {
-		/* Erase program in dataflash */
-		
-		dbg_print("Load loader... \n\r");
-		address = IMG_ADDRESS_LOADER;
-	}
-	
-	/* Проверка признака вызова km-loader */
-	
-	if (*sram0 == LOADER_CODE) {
-		dbg_print("Load loader... \n\r");
+    dbg_print("boot_hash=");
+    dbg_print(boot_hash);
+    dbg_print("\n\r");
+    dbg_print("Press k for load km-flasher\n\r");
+    
+    int time_ms = 0;
+    unsigned int cmd = 0;
+
+    initPIT();
+    turnOnLed();
+
+    while (cmd != K_SYMBOL && time_ms <= DELAY_LOAD_MS)
+    {
+        cmd = read_dbgu(DBGU_RHR);
+
+        if (getPSR() != 0)
+        {
+            time_ms += 1;
+            getPVR();
+        }
+    }
+
+    disablePIT();
+    turnOffLed();
+
+	if (cmd == K_SYMBOL || *sram0 == LOADER_CODE) 
+    {
+		dbg_print("Load km-flasher...\n\r");
 		address = IMG_ADDRESS_LOADER;
 	}
 	
