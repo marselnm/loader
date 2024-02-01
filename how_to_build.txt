@@ -1,0 +1,13 @@
+How to build boot for arm91sam9263 for SPI dataflash.
+
+write in cmd:
+
+cd loader/board/at91sam9263ek/dataflash
+make
+
+result: dataflash_at91sam9263ek.bin
+
+If necessary to build boot for debug:
+
+change in Makefile LINK_ADDR=0x000000 on LINK_ADDR=0x300000
+and use terminal or jtag to put dataflash_at91sam9263ek.bin in memory.  
